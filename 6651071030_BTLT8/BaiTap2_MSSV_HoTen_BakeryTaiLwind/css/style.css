@@ -1,0 +1,6 @@
+html{
+    scroll-behavior: smooth;
+}
+#mobile-menu{
+    transition: all 0.3s ease-in-out;
+}

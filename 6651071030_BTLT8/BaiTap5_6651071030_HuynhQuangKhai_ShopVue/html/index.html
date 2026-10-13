@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THẾ GIỚI PHỤ KIỆN - Shop Phụ Kiện Điện Thoại</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Font CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- Vue 3 CDN (Bắt buộc nhúng TRƯỚC app.js) -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
+
+    <div id="app" class="flex-grow flex flex-col">
+        
+        <!-- HEADER / NAVIGATION (Yêu cầu 3) -->
+        <header class="bg-white shadow-sm sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+                <!-- Logo -->
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-battery-half text-blue-600 text-2xl"></i>
+                    <span class="font-bold text-xl tracking-wider text-gray-800">THẾ GIỚI PHỤ KIỆN</span>
+                </div>
+
+                <!-- Menu điều hướng tĩnh -->
+                <nav class="hidden md:flex space-x-6 text-sm font-semibold uppercase text-gray-600">
+                    <a href="#" class="text-blue-600">HOME</a>
+                    <a href="#" class="hover:text-blue-600">SHOP</a>
+                    <a href="#" class="hover:text-blue-600">ACCESSORIES</a>
+                    <a href="#" class="hover:text-blue-600">CASES</a>
+                    <a href="#" class="hover:text-blue-600">EARPHONES</a>
+                    <a href="#" class="hover:text-blue-600">SALE</a>
+                </nav>
+
+                <!-- Icon giỏ hàng + Thanh tìm kiếm (Yêu cầu 3 & 8) -->
+                <div class="flex items-center space-x-4">
+                    <!-- Icon giỏ hàng hiển thị số lượng bằng Vue {{ cartCount }} -->
+                    <div class="relative cursor-pointer bg-blue-500 text-white p-2 rounded-lg">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                        <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                            {{ cartCount }}
+                        </span>
+                    </div>
+
+                    <!-- Ô tìm kiếm 2 chiều (v-model="tuKhoa") -->
+                    <div class="relative">
+                        <input type="text" v-model="tuKhoa" placeholder="Tìm kiếm sản phẩm..." class="border rounded-full py-1 px-4 pl-9 text-sm focus:outline-none focus:border-blue-500 w-40 sm:w-60">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-400 text-xs"></i>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="max-w-7xl mx-auto px-4 py-8 flex-grow w-full">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                <!-- DANH SÁCH SẢN PHẨM (SECTION - Yêu cầu 5 & 8) -->
+                <section class="lg:col-span-2">
+                    <h2 class="text-xl font-bold mb-4 text-gray-700">Sản phẩm nổi bật</h2>
+                    
+                    <!-- Thông báo khi tìm kiếm không ra kết quả -->
+                    <div v-if="danhSachLoc.length === 0" class="p-4 bg-yellow-50 text-yellow-700 rounded-lg">
+                        Không tìm thấy sản phẩm nào phù hợp với từ khóa "{{ tuKhoa }}".
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-6">
+                        <!-- Lặp danh sách bằng v-for từ danhSachLoc -->
+                        <article v-for="sanPham in danhSachLoc" :key="sanPham.id" class="bg-white p-4 rounded-xl shadow-sm border flex flex-col justify-between hover:shadow-md transition">
+                            <div>
+                                <img :src="sanPham.hinhAnh" :alt="sanPham.ten" class="w-full h-48 object-contain mb-4 rounded">
+                                <h3 class="font-bold text-sm uppercase mb-1">{{ sanPham.ten }}</h3>
+                                <p class="text-xs text-gray-500 mb-2 line-clamp-2">{{ sanPham.moTa }}</p>
+                            </div>
+                            <div class="flex justify-between items-center mt-4">
+                                <span class="font-bold text-blue-600">{{ formatGia(sanPham.gia) }} VNĐ</span>
+                                <!-- Nút thêm vào giỏ (@click - Yêu cầu 6) -->
+                                <button @click="themVaoGio(sanPham)" class="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-lg transition">
+                                    <i class="fa-solid fa-cart-plus"></i>
+                                </button>
+                            </div>
+                        </article>
+                    </div>
+                </section>
+
+                <!-- GIỎ HÀNG (ASIDE - Yêu cầu 7) -->
+                <aside class="bg-white p-6 rounded-xl shadow-sm border h-fit">
+                    <h2 class="text-xl font-bold mb-1 uppercase">YOUR CART</h2>
+                    <p class="text-xs text-gray-500 mb-4">Giỏ hàng của bạn</p>
+
+                    <!-- Hiển thị khi giỏ hàng trống (v-if) -->
+                    <div v-if="cart.length === 0" class="py-8 text-center text-gray-400">
+                        <i class="fa-solid fa-basket-shopping text-4xl mb-2"></i>
+                        <p>Giỏ hàng trống</p>
+                    </div>
+
+                    <!-- Hiển thị khi có sản phẩm (v-else) -->
+                    <div v-else>
+                        <div class="space-y-4 max-h-80 overflow-y-auto mb-4 pr-1">
+                            <div v-for="(item, index) in cart" :key="index" class="flex items-center justify-between border-b pb-3">
+                                <img :src="item.hinhAnh" :alt="item.ten" class="w-12 h-12 object-contain rounded border">
+                                <div class="flex-1 px-3">
+                                    <h4 class="text-xs font-bold uppercase truncate">{{ item.ten }}</h4>
+                                    <p class="text-xs text-gray-500">{{ formatGia(item.gia) }} VNĐ</p>
+                                </div>
+                                <!-- Nút xóa khỏi giỏ (@click - Yêu cầu 7) -->
+                                <button @click="xoaKhoiGio(index)" class="text-red-500 hover:text-red-700">
+                                    <i class="fa-solid fa-circle-xmark"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Tổng tiền (Computed Property) -->
+                        <div class="flex justify-between items-center pt-4 border-t font-bold text-base mb-4">
+                            <span>TOTAL</span>
+                            <span class="text-blue-600">{{ formatGia(tongTien) }} VNĐ</span>
+                        </div>
+
+                        <button class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg font-bold text-sm uppercase transition">
+                            CHECKOUT <span class="block text-xs font-normal">Thanh toán</span>
+                        </button>
+                    </div>
+                </aside>
+            </div>
+        </main>
+
+        <!-- SECTION KHUYẾN MÃI (Yêu cầu 9) -->
+        <section class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-6 text-center font-bold text-lg tracking-wide uppercase">
+            GET 20% OFF ALL CASES! LIMITED TIME OFFER
+        </section>
+
+        <!-- FOOTER (Yêu cầu 10) -->
+        <footer class="bg-gray-900 text-gray-400 py-8 text-xs">
+            <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                <div>
+                    <h4 class="text-white font-bold mb-2 uppercase">ABOUT</h4>
+                    <p class="hover:underline cursor-pointer mb-1">About Us</p>
+                    <p class="hover:underline cursor-pointer mb-1">Contact Us</p>
+                    <p class="hover:underline cursor-pointer mb-1">Earphones</p>
+                    <p class="hover:underline cursor-pointer">Control Policy</p>
+                </div>
+                <div>
+                    <h4 class="text-white font-bold mb-2 uppercase">SUPPORT</h4>
+                    <p class="hover:underline cursor-pointer mb-1">Accessibility</p>
+                    <p class="hover:underline cursor-pointer mb-1">Shipping</p>
+                    <p class="hover:underline cursor-pointer mb-1">Support</p>
+                    <p class="hover:underline cursor-pointer">Contact Us</p>
+                </div>
+                <div>
+                    <h4 class="text-white font-bold mb-2 uppercase">FAQs</h4>
+                    <p class="hover:underline cursor-pointer mb-1">FAQs</p>
+                    <p class="hover:underline cursor-pointer">Privacy Policy</p>
+                </div>
+                <div class="flex flex-col items-start md:items-end justify-between">
+                    <div class="flex space-x-3 text-lg text-white mb-4">
+                        <i class="fa-brands fa-facebook cursor-pointer hover:text-blue-400"></i>
+                        <i class="fa-brands fa-twitter cursor-pointer hover:text-blue-400"></i>
+                        <i class="fa-brands fa-instagram cursor-pointer hover:text-pink-400"></i>
+                        <i class="fa-brands fa-youtube cursor-pointer hover:text-red-500"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center border-t border-gray-800 pt-4">
+                © Copyright 2026. Lch. All rights reserved.
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- App Vue.js (Bắt buộc nhúng SAU Vue CDN) -->
+    <script src="../js/script.js"></script>
+</body>
+</html>
